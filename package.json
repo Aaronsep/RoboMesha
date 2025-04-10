@@ -11,6 +11,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
+    "dotenv": "^16.4.7",
     "firebase": "^11.6.0",
     "lucide-react": "^0.487.0",
     "react": "^19.1.0",
@@ -21,21 +22,21 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.2",
     "autoprefixer": "^10.4.21",
+    "dotenv": "^16.4.7",
     "electron": "^35.1.5",
+    "electron-builder": "^26.0.12",
     "electron-packager": "^17.1.2",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17"
   },
   "scripts": {
-  "start": "react-scripts start",
-  "build": "react-scripts build",
-  "test": "react-scripts test",
-  "eject": "react-scripts eject",
-  "electron": "npm run build && electron .",
-  "dist": "electron-packager . RoboMesha --platform=win32 --arch=x64 --out=dist --overwrite --icon=%USERPROFILE%\\Downloads\\chatgpt_image_2_abr_2025__08_38_03_qkW_icon.ico"
-
-}
-,
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "electron": "npm run build && electron .",
+    "dist": "node injectEnv.js && electron-builder --win --x64 --publish never"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -53,5 +54,34 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "build": {
+    "appId": "com.robomesha.app",
+    "productName": "RoboMesha",
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico",
+      "extraResources": [
+        "path/to/.env"
+      ],
+      "publish": null,  
+      "directories": {
+        "output": "dist"
+      },
+      "fileAssociations": [
+        {
+          "ext": "exe",
+          "name": "RoboMesha"
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,  
+      "createStartMenuShortcut": true
+    }
   }
+
 }
