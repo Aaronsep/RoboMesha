@@ -3,17 +3,16 @@ import { getDatabase, ref, set } from "firebase/database";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCiEZPwvi5ng43ZcYNBFRdOqctt4Tgia4c",
-  authDomain: "robomesha.firebaseapp.com",
-  databaseURL: "https://robomesha-default-rtdb.firebaseio.com",
-  projectId: "robomesha",
-  storageBucket: "robomesha.appspot.com", // ← ojo: aquí tenía un error, debe ser .appspot.com
-  messagingSenderId: "238819375045",
-  appId: "1:238819375045:web:2a46b2fd473db731277dac",
-  measurementId: "G-8P3S5LFPQR"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
-// Inicializa Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const analytics = getAnalytics(app);
