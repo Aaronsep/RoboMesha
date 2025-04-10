@@ -1,0 +1,60 @@
+.vector-container {
+    background: radial-gradient(circle at center, #0f172a, #0a0e1a);
+    border: 1px solid #334155;
+    border-radius: 1rem;
+    box-shadow: 0 0 20px #0ff3, inset 0 0 10px #0ff2;
+    padding: 8px;
+    width: fit-content;
+    margin-top: 1rem;
+  }
+  
+  .vector-svg {
+    display: block;
+  }
+  
+  .grid-cell {
+    fill: rgba(148, 163, 184, 0.08);
+    stroke: #334155;
+    stroke-width: 0.5;
+  }
+  
+  .center-dot {
+    fill: white;
+    stroke: cyan;
+    stroke-width: 1;
+    filter: drop-shadow(0 0 4px cyan);
+  }
+  
+  .vector-line {
+    stroke: cyan;
+    stroke-width: 3;
+    transition: all 0.2s ease-in-out;
+    filter: drop-shadow(0 0 4px cyan);
+  }
+  
+  .arrow-head {
+    fill: cyan;
+  }
+  
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .rotate-normal {
+    animation-name: rotate;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  
+  .rotate-reverse {
+    animation-name: rotate;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: reverse;
+  }
+  
+  .vector-svg {
+    touch-action: none;
+  }
+  
