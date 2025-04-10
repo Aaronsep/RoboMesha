@@ -155,3 +155,10 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Other files to ignore
+npm-debug.log*

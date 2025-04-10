@@ -1,10 +1,26 @@
 import React, { useEffect, useState } from 'react';
 
 function BackgroundVideo() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
 
+  // Actualiza el tamaño del video al cambiar el tamaño de la ventana
   useEffect(() => {
-    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+    const updateVideoSize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      setVideoSize({ width, height });
+    };
+
+    // Inicializar el tamaño del video al cargar
+    updateVideoSize();
+
+    // Escuchar cambios en el tamaño de la ventana
+    window.addEventListener('resize', updateVideoSize);
+
+    // Limpiar el listener cuando el componente se desmonte
+    return () => {
+      window.removeEventListener('resize', updateVideoSize);
+    };
   }, []);
 
   return (
@@ -12,12 +28,19 @@ function BackgroundVideo() {
       autoPlay
       loop
       muted
-      className="absolute top-0 left-0 w-full h-full object-cover brightness-70"
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: `${videoSize.width}px`,
+        height: `${videoSize.height}px`,
+        zIndex: -10,
+        objectFit: 'cover',
+        pointerEvents: 'none',
+      }}
     >
-      <source
-        src={isMobile ? '/video-vertical.mp4' : '/153957-806571952_medium.mp4'}
-        type="video/mp4"
-      />
+      <source src="153957-806571952_medium.mp4" type="video/mp4" />
       Tu navegador no soporta videos HTML5.
     </video>
   );

@@ -95,7 +95,6 @@ export default function App() {
         <p>Vx = {vx} | Vy = {vy} | ω = {w}</p>
       </div>
 
-
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="bg-white/10 backdrop-blur-xl p-10 rounded-3xl shadow-2xl w-full max-w-xl flex flex-col items-center">
           <h1 className="text-3xl font-bold mb-8 tracking-tight text-white text-center">Control de Movimiento<br />RoboMesha</h1>
