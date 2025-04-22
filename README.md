@@ -92,33 +92,64 @@ La sección `"build"` en tu `package.json` controla cómo se genera el instalado
 
 ```json
 "build": {
-  "appId": "com.robomesha.app", // Identificador único de la app
-  "productName": "RoboMesha",   // Nombre que se mostrará en el instalador y en el sistema
+  "appId": "com.robomesha.app",
+  "productName": "RoboMesha",
   "win": {
-    "target": "nsis",           // Usamos NSIS para crear instaladores .exe
-    "icon": "icon.ico",         // Icono que tendrá el ejecutable
+    "target": "nsis",
+    "icon": "icon.ico",
     "extraResources": [
-      "path/to/.env"            // Recursos extra que quieres incluir, como archivos de config
+      "path/to/.env"
     ],
     "directories": {
-      "output": "dist"          // Carpeta de salida del ejecutable generado
+      "output": "dist"
     },
     "fileAssociations": [
       {
         "ext": "exe",
-        "name": "RoboMesha"     // Asociación de archivos, útil para abrir tipos de archivo específicos
+        "name": "RoboMesha"
       }
     ]
   },
   "nsis": {
-    "oneClick": true,                    // Instalación en un solo clic (sin asistente)
-    "perMachine": true,                  // Instalación para todos los usuarios del sistema
-    "allowToChangeInstallationDirectory": true, // Permite al usuario elegir la carpeta de instalación
-    "createDesktopShortcut": true,       // Crea acceso directo en el escritorio
-    "createStartMenuShortcut": true      // Crea acceso directo en el menú de inicio
+    "oneClick": true,
+    "perMachine": true,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true
   }
 }
 ```
 
 Puedes modificar estos valores para personalizar el comportamiento y presentación de tu instalador. Más opciones están disponibles en la [documentación oficial](https://www.electron.build/configuration/configuration).
 
+---
+
+## Ejecución en Raspberry Pi
+
+El archivo `firebaseconnect3.py`, ubicado en la Raspberry Pi, es el encargado de:
+
+- Leer los datos de movimiento desde Firebase.  
+- Controlar la lógica de movimiento del carrito en tiempo real.
+
+### Instalación de dependencias en la Raspberry Pi
+
+Primero asegúrate de tener `pip3` instalado:
+
+```bash
+sudo apt update
+sudo apt install python3-pip
+```
+
+Luego instala las dependencias:
+
+```bash
+pip3 install -r requirements_pi.txt
+```
+
+### Ejecutar el script principal
+
+```bash
+python3 /home/ITESO/apps/PAP/firebaseconnect3.py
+```
+
+Este archivo debe estar corriendo en todo momento para que el sistema funcione correctamente.
