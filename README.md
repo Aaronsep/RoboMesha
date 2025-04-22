@@ -149,7 +149,7 @@ pip3 install -r requirements_pi.txt
 ### Ejecutar el script principal
 
 ```bash
-python3 /home/ITESO/apps/PAP/firebaseconnect3.py
+python3 /home/USER/firebaseconnect3.py
 ```
 
 Este archivo debe estar corriendo en todo momento para que el sistema funcione correctamente.
