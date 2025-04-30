@@ -2,6 +2,8 @@
   "name": "interfaz-firebase",
   "version": "0.1.0",
   "private": true,
+  "description": "Interfaz de control para RoboMesha usando Firebase y Electron",
+  "author": "Aaron Sepúlveda <ahs.mechatronic.eng@gmail.com>",
   "main": "public/electron.js",
   "homepage": "./",
   "dependencies": {
@@ -58,16 +60,16 @@
   "build": {
     "appId": "com.robomesha.app",
     "productName": "RoboMesha",
+    "directories": {
+      "output": "dist"
+    },
     "win": {
       "target": "nsis",
       "icon": "icon.ico",
       "extraResources": [
         "path/to/.env"
       ],
-      "publish": null,  
-      "directories": {
-        "output": "dist"
-      },
+      "publish": null,
       "fileAssociations": [
         {
           "ext": "exe",
@@ -76,11 +78,11 @@
       ]
     },
     "nsis": {
-      "oneClick": true,
-      "perMachine": true,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,  
-      "createStartMenuShortcut": true
+    "oneClick": false,
+    "perMachine": true,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true
     }
   }
 
