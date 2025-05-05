@@ -9,6 +9,8 @@
   "dependencies": {
     "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.15",
+    "@headlessui/react": "^2.2.2",
+    "@heroicons/react": "^2.2.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -63,27 +65,29 @@
     "directories": {
       "output": "dist"
     },
+    "files": [
+      "build/**/*",
+      "public/electron.js"
+    ],
+    "extraResources": [
+      {
+        "from": ".env",
+        "to": ".env"
+      }
+    ],
     "win": {
       "target": "nsis",
       "icon": "icon.ico",
-      "extraResources": [
-        "path/to/.env"
-      ],
-      "publish": null,
-      "fileAssociations": [
-        {
-          "ext": "exe",
-          "name": "RoboMesha"
-        }
-      ]
+      "publish": null
     },
     "nsis": {
-    "oneClick": false,
-    "perMachine": true,
-    "allowToChangeInstallationDirectory": true,
-    "createDesktopShortcut": true,
-    "createStartMenuShortcut": true
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "RoboMesha",
+      "uninstallDisplayName": "Desinstalar RoboMesha"
     }
   }
-
 }

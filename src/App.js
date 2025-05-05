@@ -1,17 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ref, set } from 'firebase/database';
+import { ref, set, onValue, onDisconnect } from 'firebase/database';
 import { database } from './firebaseConfig';
 import './CustomButtons.css';
 import { RotateCcw, RotateCw } from 'lucide-react';
 import VectorVisualizer from './VectorVisualizer';
 import './App.css';
 import BackgroundVideo from './BackgroundVideo';
+import { Listbox } from '@headlessui/react';
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 
 export default function App() {
+  const carros = ['robomesha1', 'robomesha2', 'robomesha3'];
+  
+  const [carroSeleccionado, setCarroSeleccionado] = useState(carros[0]);
   const [vx, setVx] = useState(0);
   const [vy, setVy] = useState(0);
   const [w, setW] = useState(0);
-  const [carroSeleccionado, setCarroSeleccionado] = useState('robomesha1');
 
   const vxRef = useRef(vx);
   const vyRef = useRef(vy);
@@ -28,25 +32,25 @@ export default function App() {
 
     vxRef.current = newVx;
     vyRef.current = newVy;
-    wRef.current = newW;
+    wRef.current = newW;   
 
     const comando = {
       accion: newVx || newVy || newW ? 'mover' : 'detener',
-      vx: vxRef.current,
-      vy: vyRef.current,
-      w: wRef.current,
+      vx: newVx,
+      vy: newVy,
+      w: newW,
       timestamp: Date.now(),
     };
 
-    set(ref(database, `comandos/${carroSeleccionado}`), comando)
-      .then(() => {
-        setTimeout(() => {
-          set(ref(database, `comandos/${carroSeleccionado}`), {
-            ...comando,
-            timestamp: comando.timestamp + 10,
-          });
-        }, 50);
-      });
+    const comandoRef = ref(database, `comandos/${carroSeleccionado}`);
+    set(comandoRef, comando).then(() => {
+      setTimeout(() => {
+        set(comandoRef, {
+          ...comando,
+          timestamp: comando.timestamp + 10,
+        });
+      }, 50);
+    });
   };
 
   const comando = (direccion) => {
@@ -69,6 +73,59 @@ export default function App() {
     updateState(newVx, newVy, newW);
   };
 
+  const finalizar = () => {
+    updateState(0, 0, 0);
+    setTimeout(() => {
+      window.close();
+    }, 300);
+  };
+  
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
+  }, []);
+
+  useEffect(() => {
+    const comandoRef = ref(database, `comandos/${carroSeleccionado}`);
+    onDisconnect(comandoRef).set({
+      accion: 'detener',
+      vx: 0,
+      vy: 0,
+      w: 0,
+      timestamp: Date.now(),
+    });
+  }, [carroSeleccionado]);
+
+  useEffect(() => {
+    const connectedRef = ref(database, ".info/connected");
+    const unsubscribe = onValue(connectedRef, (snapshot) => {
+      if (snapshot.val() === false) {
+        updateState(0, 0, 0);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const comando = {
+        accion: 'detener',
+        vx: 0,
+        vy: 0,
+        w: 0,
+        timestamp: Date.now(),
+      };
+      navigator.sendBeacon(
+        `https://robomesha-default-rtdb.firebaseio.com/comandos/${carroSeleccionado}.json`,
+        JSON.stringify(comando)
+      );
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [carroSeleccionado]);
+
   const botones = [
     { label: "rot_izq", action: "rot_izq", rotation: "45" },
     { label: "adelante", action: "adelante", rotation: "90" },
@@ -79,41 +136,65 @@ export default function App() {
     { label: "abajo", action: "abajo", rotation: "-90", span: true },
   ];
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play();
-    }
-  }, []);
-
   return (
     <div className="App">
       <BackgroundVideo />
 
-      <div className="absolute top-5 left-5 text-white text-xl z-20 hidden">
-        <p>Vx = {vx} | Vy = {vy} | ω = {w}</p>
-      </div>
-
-      <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="min-h-screen relative flex items-center justify-center px-4">
         <div className="bg-white/10 backdrop-blur-xl p-10 rounded-3xl shadow-2xl w-full max-w-xl flex flex-col items-center">
           <h1 className="text-3xl font-bold mb-6 tracking-tight text-white text-center">
             Control de Movimiento<br />RoboMesha
           </h1>
 
-          <div className="mb-6 w-full">
-            <label className="block mb-2 text-sm font-bold text-white">Selecciona el carro</label>
-            <select
-              value={carroSeleccionado}
-              onChange={(e) => {
-                setCarroSeleccionado(e.target.value);
-                updateState(0, 0, 0);
-              }}
-              className="w-full px-4 py-2 rounded-xl border border-white/30 text-white text-center bg-white/5 backdrop-blur-md appearance-none focus:outline-none focus:ring-2 focus:ring-white/30"
-            >
-              <option value="robomesha1" className="bg-slate-900 text-white">Robomesha 1</option>
-              <option value="robomesha2" className="bg-slate-900 text-white">Robomesha 2</option>
-              <option value="robomesha3" className="bg-slate-900 text-white">Robomesha 3</option>
-            </select>
+          {/* Custom Listbox */}
+          <div className="mb-2 w-full flex justify-end items-center -mt-14">
+            <div className="relative w-34 z-50">
+              <Listbox
+                value={carroSeleccionado}
+                onChange={(value) => {
+                  setCarroSeleccionado(value);
+                  updateState(0, 0, 0);
+                }}
+              >
+                <div className="relative">
+                  <Listbox.Label className="block mb-1 text-xs font-bold text-white">
+                    Selecciona el carro
+                  </Listbox.Label>
+
+                  <Listbox.Button className="relative w-full rounded-md bg-gray-800 bg-opacity-30 py-2 pl-4 pr-10 text-left border border-white/10 text-white backdrop-blur-md text-sm focus:outline-none z-50 shadow">
+                    <span className="block capitalize justify-center items-center">{carroSeleccionado}</span>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                      <ChevronUpDownIcon className="h-4 w-4 text-white/40" aria-hidden="true" />
+                    </span>
+                  </Listbox.Button>
+
+                  <Listbox.Options className="absolute *:justify-center items-center mt-2 w-full max-h-60 overflow-auto rounded-md bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-2xl border border-white/10 py-1 z-50">
+                    {carros.map((carro, idx) => (
+                      <Listbox.Option
+                        key={idx}
+                        value={carro}
+                        className={({ active }) =>
+                          `cursor-pointer select-none px-4 py-2 text-sm rounded-md ${
+                            active ? 'bg-white/20 text-white' : 'text-white/80'
+                          }`
+                        }
+                      >
+                        {({ selected }) => (
+                          <div className="flex justify-between items-center">
+                            <span className={`capitalize ${selected ? 'font-semibold' : ''}`}>{carro}</span>
+                            {selected && <CheckIcon className="h-4 w-4 text-white ml-2" />}
+                          </div>
+                        )}
+                      </Listbox.Option>
+                    ))}
+                  </Listbox.Options>
+                </div>
+              </Listbox>
+            </div>
           </div>
+
+          {/* Espacio para que no suba lo demás */}
+          <div className="mb-14" />
 
           <div className="grid grid-cols-3 gap-6 w-full">
             {botones.map(({ label, action, rotation, shape, span }, idx) => (
@@ -195,7 +276,10 @@ export default function App() {
             </div>
           </div>
 
-          <button className="mt-8 px-10 py-3 text-xl font-bold rounded-xl bg-red-600 hover:bg-red-700">
+          <button
+            onClick={finalizar}
+            className="mt-8 px-10 py-3 text-xl font-bold rounded-xl bg-red-600 hover:bg-red-700"
+          >
             Finalizar
           </button>
         </div>
