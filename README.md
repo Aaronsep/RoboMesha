@@ -92,32 +92,36 @@ La sección `"build"` en tu `package.json` controla cómo se genera el instalado
 
 ```json
 "build": {
-  "appId": "com.robomesha.app",
-  "productName": "RoboMesha",
-  "win": {
-    "target": "nsis",
-    "icon": "icon.ico",
-    "extraResources": [
-      "path/to/.env"
-    ],
+    "appId": "com.robomesha.app",
+    "productName": "RoboMesha",
     "directories": {
       "output": "dist"
     },
-    "fileAssociations": [
+    "files": [
+      "build/**/*",
+      "public/electron.js"
+    ],
+    "extraResources": [
       {
-        "ext": "exe",
-        "name": "RoboMesha"
+        "from": ".env",
+        "to": ".env"
       }
-    ]
-  },
-  "nsis": {
-    "oneClick": true,
-    "perMachine": true,
-    "allowToChangeInstallationDirectory": true,
-    "createDesktopShortcut": true,
-    "createStartMenuShortcut": true
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico",
+      "publish": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "RoboMesha",
+      "uninstallDisplayName": "Desinstalar RoboMesha"
+    }
   }
-}
 ```
 
 Puedes modificar estos valores para personalizar el comportamiento y presentación de tu instalador. Más opciones están disponibles en la [documentación oficial](https://www.electron.build/configuration/configuration).
