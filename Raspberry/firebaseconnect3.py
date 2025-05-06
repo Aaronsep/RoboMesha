@@ -13,7 +13,7 @@ firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://robomesha-default-rtdb.firebaseio.com'
 })
 
-# Identificación
+# IdentificaciÃ³n
 hostname = socket.gethostname()
 id_final = f"carrito_{hostname}_{uuid.uuid4().hex[:6]}"
 carritos_ref = db.reference('carritos_disponibles')
@@ -27,15 +27,19 @@ carritos_ref.child(id_final).set({
 })
 print(f"Carrito registrado como: {id_final}")
 
-# Motores (simulación si no hay smbus2)
+# Motores (simulaciÃ³n si no hay smbus2)
 try:
     import smbus2 as smbus
     bus = smbus.SMBus(1)
-except:
+    # Probar si el bus responde
+    bus.write_quick(0x34)
+except Exception as e:
+    print(f"[Simulacion] I2C no disponible: {e}")
     class FakeBus:
         def write_i2c_block_data(self, addr, reg, data):
             print(f"[Simulacion] I2C -> Addr: {hex(addr)}, Reg: {hex(reg)}, Data: {data}")
     bus = FakeBus()
+
 
 DIRECCION_MOTORES = 0x34
 REG_VELOCIDAD_FIJA = 0x33
@@ -100,21 +104,27 @@ terminar_ref = db.reference(f"terminar/{id_final}")
 def escuchar_comandos():
     print("Escuchando comandos...")
     last_ts = 0
-    while True:
+    last_ping = 0
 
-        # Ping de conexión cada 5 segundos
-        if int(time.time()) % 1 == 0:
+    while True:
+        now = int(time.time())
+
+        # Enviar ping de conexion cada 1 segundo
+        if now - last_ping >= 1:
             estado_ref = db.reference(f"estado_conexion/{id_final}")
             estado_ref.set({
                 "por": id_final,
                 "hostname": hostname,
-                "timestamp": int(time.time())
+                "timestamp": now
             })
+            last_ping = now
 
+        # Verificar senal de terminacion
         if terminar_ref.get() is True:
-            print("Se recibió señal de terminación desde el cliente.")
+            print("Se recibio senal de terminacion desde el cliente.")
             cerrar_todo()
 
+        # Procesar comandos
         data = comandos_ref.get()
         if isinstance(data, dict) and "timestamp" in data and data["timestamp"] != last_ts:
             vx = int(data.get("vx", 0))
@@ -130,7 +140,9 @@ def escuchar_comandos():
                 print("Motores detenidos.")
 
             last_ts = data["timestamp"]
+
         time.sleep(0.1)
+
 
 # Main
 try:

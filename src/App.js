@@ -229,43 +229,56 @@ export default function App() {
   }, []);  
 
   useEffect(() => {
+    const cicloInactividadMax = 60; // 60 ciclos x 5s = 5 minutos
+    const cicloDesconexionMax = 3;  // 3 ciclos x 5s = 15 segundos
+  
+    const ciclos = {};
+  
     const verificarCarritosInactivos = async () => {
       const disponiblesRef = ref(database, 'carritos_disponibles');
-      const ahora = Date.now();
-      const ahoraSeg = Math.floor(ahora / 1000);
-      const timeoutInactividad = 60*10; // segundos sin comandos
-      const timeoutConexion = 15;    // segundos sin ping de conexión
+      const snapshot = await get(disponiblesRef);
+      const disponibles = snapshot.val() || {};
   
-      try {
-        const snapshot = await get(disponiblesRef);
-        const disponibles = snapshot.val() || {};
+      for (const id in disponibles) {
+        console.log(`[Depuración] Evaluando ${id}`);
+        const comandoSnap = await get(ref(database, `comandos/${id}/timestamp`));
+        const conexionSnap = await get(ref(database, `estado_conexion/${id}`));
   
-        for (const id in disponibles) {
-          const empSnap = await get(ref(database, `emparejamientos/${id}`));
-          const tsSnap = await get(ref(database, `comandos/${id}/timestamp`));
-          const timestamp = tsSnap.exists() ? tsSnap.val() : 0;
-          const timestampSeg = Math.floor(timestamp / 1000);
+        const ts = comandoSnap.exists() ? comandoSnap.val() : null;
+        const conn = conexionSnap.exists() ? conexionSnap.val().timestamp : null;
   
-          const estadoSnap = await get(ref(database, `estado_conexion/${id}`));
-          const tsConexion = estadoSnap.exists() ? estadoSnap.val().timestamp : null;
-          const esFantasma = !estadoSnap.exists();
+        if (!ciclos[id]) ciclos[id] = { ts: ts, tsCount: 0, conn: conn, connCount: 0 };
   
-          const inactivo = timestampSeg && ahoraSeg - timestampSeg > timeoutInactividad;
-          const desconectado = tsConexion && ahoraSeg - tsConexion > timeoutConexion;
-  
-          if (inactivo || desconectado || esFantasma) {
-            const terminarRef = ref(database, `terminar/${id}`);
-            await set(terminarRef, true);
-            await remove(ref(database, `estado_conexion/${id}`));
-            await remove(ref(database, `comandos/${id}`));
-            await remove(ref(database, `emparejamientos/${id}`));
-            await remove(ref(database, `ocupado/${id}`));
-            await remove(ref(database, `carritos_disponibles/${id}`));
-            console.log(`[Limpieza] ${id} liberado por inactividad o por ser fantasma.`);
-          }
+        // Detectar si no ha cambiado el timestamp del comando
+        if (ts === ciclos[id].ts) ciclos[id].tsCount++;
+        else {
+          ciclos[id].ts = ts;
+          ciclos[id].tsCount = 0;
         }
-      } catch (error) {
-        console.error("Error al limpiar carritos inactivos:", error);
+  
+        // Detectar si no ha cambiado el ping de estado
+        if (conn === ciclos[id].conn) ciclos[id].connCount++;
+        else {
+          ciclos[id].conn = conn;
+          ciclos[id].connCount = 0;
+        }
+  
+        const inactivo = ciclos[id].tsCount >= cicloInactividadMax;
+        const desconectado = ciclos[id].connCount >= cicloDesconexionMax;
+        const fantasma = conn === null;
+  
+        console.log(`- inactivo: ${ciclos[id].tsCount}, desconectado: ${ciclos[id].connCount}, fantasma: ${fantasma}`);
+  
+        if (inactivo || desconectado || fantasma) {
+          await set(ref(database, `terminar/${id}`), true);
+          await remove(ref(database, `estado_conexion/${id}`));
+          await remove(ref(database, `comandos/${id}`));
+          await remove(ref(database, `emparejamientos/${id}`));
+          await remove(ref(database, `ocupado/${id}`));
+          await remove(ref(database, `carritos_disponibles/${id}`));
+          delete ciclos[id];
+          console.log(`[Limpieza] ${id} liberado por inactividad o por ser fantasma.`);
+        }
       }
     };
   

@@ -128,32 +128,42 @@ Puedes modificar estos valores para personalizar el comportamiento y presentaci�
 
 ---
 
-## Ejecución en Raspberry Pi
+# RoboMesha – Raspberry Pi Setup
 
-El archivo `firebaseconnect3.py`, ubicado en la Raspberry Pi, es el encargado de:
+## Requisitos Previos
 
-- Leer los datos de movimiento desde Firebase.  
-- Controlar la lógica de movimiento del carrito en tiempo real.
-
-### Instalación de dependencias en la Raspberry Pi
-
-Primero asegúrate de tener `pip3` instalado:
+Asegúrate de tener instalado Python 3 y `pip`. Para instalar pip:
 
 ```bash
 sudo apt update
-sudo apt install python3-pip
+sudo apt install python3-pip python3-venv
 ```
 
-Luego instala las dependencias:
+## Crear y activar un entorno virtual
+
+Desde la carpeta donde tengas los archivos de RoboMesha (por ejemplo: `~/Desktop/Raspberry`), ejecuta:
 
 ```bash
-pip3 install -r requirements_pi.txt
+python3 -m venv firebase
+source firebase/bin/activate
 ```
 
-### Ejecutar el script principal
+Esto creará un entorno virtual en la carpeta `firebase` y lo activará.
+
+## Instalar dependencias
+
+Con el entorno virtual activado, instala las dependencias necesarias con:
 
 ```bash
-python3 /home/USER/firebaseconnect3.py
+pip install -r requirements_pi.txt
 ```
 
-Este archivo debe estar corriendo en todo momento para que el sistema funcione correctamente.
+## Ejecutar el script principal
+
+Una vez instaladas las dependencias, puedes ejecutar el script con:
+
+```bash
+python firebaseconnect3.py
+```
+
+Este archivo debe mantenerse corriendo para que la Raspberry pueda recibir comandos desde Firebase y controlar los motores.
