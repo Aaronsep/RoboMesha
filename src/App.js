@@ -128,7 +128,6 @@ export default function App() {
     vxRef.current = 0;
     vyRef.current = 0;
     wRef.current = 0;
-    setTimeout(() => window.close(), 500);
   };
 
   useEffect(() => {
