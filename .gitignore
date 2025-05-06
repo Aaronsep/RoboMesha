@@ -16,9 +16,13 @@
 .env.test.local
 .env.production.local
 
+Raspberry/robomesha-firebase-adminsdk-fbsvc-365a5d6215
+
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
 # Logs
 logs
 *.log
