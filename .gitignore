@@ -166,3 +166,6 @@ Thumbs.db
 
 # Other files to ignore
 npm-debug.log*
+
+#Firebase cache
+.firebase/
