@@ -1,6 +1,8 @@
+<!doctype html>
+<html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
   <title>RoboMesha</title>
   <meta name="description" content="RoboMesha es una mesa robótica autónoma equipada con sensores y control inteligente, diseñada para moverse de forma segura y responder a comandos." />
@@ -11,6 +13,7 @@
 
   <!-- Apariencia -->
   <meta name="theme-color" content="#0b0b0b" />
+  <meta name="color-scheme" content="dark light" />
 
   <!-- Open Graph (para WhatsApp y redes sociales) -->
   <meta property="og:type" content="website" />
@@ -18,4 +21,15 @@
   <meta property="og:description" content="Mesa robótica autónoma con sensores y control inteligente." />
   <meta property="og:image" content="https://robomesha.kyro.mx/RoboMesha.png" />
   <meta property="og:url" content="https://robomesha.kyro.mx" />
+
+  <!-- Fondo inicial oscuro para evitar flash blanco -->
+  <style>
+    html, body { background:#0b0b0b; margin:0; padding:0; height:100%; }
+    #root { background:#0b0b0b; min-height:100vh; }
+  </style>
 </head>
+<body class="min-h-screen overflow-auto">
+  <div id="root"></div>
+  <noscript>Necesitas habilitar JavaScript para usar RoboMesha.</noscript>
+</body>
+</html>
