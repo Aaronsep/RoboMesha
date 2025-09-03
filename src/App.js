@@ -8,15 +8,41 @@ import './App.css';
 import BackgroundVideo from './BackgroundVideo';
 import { Listbox } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
+import Joystick from './components/Joystick';
+import Dial from './components/Dial';
+
+// Safe UUID generator for older mobile browsers
+function safeUUID() {
+  const c = (typeof window !== 'undefined' && window.crypto) || null;
+  if (c?.randomUUID) return c.randomUUID();
+  if (c?.getRandomValues) {
+    // RFC4122 v4
+    const buf = new Uint8Array(16);
+    c.getRandomValues(buf);
+    buf[6] = (buf[6] & 0x0f) | 0x40;
+    buf[8] = (buf[8] & 0x3f) | 0x80;
+    const hex = Array.from(buf, b => b.toString(16).padStart(2, '0'));
+    return (
+      hex.slice(0, 4).join('') + '-' +
+      hex.slice(4, 6).join('') + '-' +
+      hex.slice(6, 8).join('') + '-' +
+      hex.slice(8, 10).join('') + '-' +
+      hex.slice(10, 16).join('')
+    );
+  }
+  // Fallback: time + random
+  return 'client-' + Math.random().toString(36).slice(2) + '-' + Date.now().toString(36);
+}
 
 export default function App() {
   const [carros, setCarros] = useState([]);
   const [carroSeleccionado, setCarroSeleccionado] = useState(null);
-  const clientId = useRef(crypto.randomUUID());
+  const clientId = useRef(safeUUID());
 
   const [vx, setVx] = useState(0);
   const [vy, setVy] = useState(0);
   const [w, setW] = useState(0);
+  const [connected, setConnected] = useState(true);
 
   const vxRef = useRef(vx);
   const vyRef = useRef(vy);
@@ -36,6 +62,24 @@ export default function App() {
   ];
 
   const limitar = (valor) => Math.max(-9, Math.min(9, valor));
+
+  // Throttled sender
+  const queuedRef = useRef(null);
+  const timerRef = useRef(null);
+  const THROTTLE_MS = 60;
+
+  const sendThrottled = (payload) => {
+    queuedRef.current = payload;
+    if (timerRef.current) return;
+    timerRef.current = setTimeout(() => {
+      const toSend = queuedRef.current;
+      queuedRef.current = null;
+      timerRef.current = null;
+      if (!carroSeleccionado) return;
+      const comandoRef = ref(database, `comandos/${carroSeleccionado}`);
+      set(comandoRef, toSend);
+    }, THROTTLE_MS);
+  };
 
   const updateState = (newVx, newVy, newW) => {
     if (!carroSeleccionado) return;
@@ -57,8 +101,7 @@ export default function App() {
       timestamp: Date.now(),
     };
 
-    const comandoRef = ref(database, `comandos/${carroSeleccionado}`);
-    set(comandoRef, comando);
+    sendThrottled(comando);
   };
 
   const comando = (direccion) => {
@@ -177,7 +220,9 @@ export default function App() {
   useEffect(() => {
     const connectedRef = ref(database, ".info/connected");
     return onValue(connectedRef, (snap) => {
-      if (snap.val() === false && carroSeleccionado) {
+      const isConn = !!snap.val();
+      setConnected(isConn);
+      if (!isConn && carroSeleccionado) {
         updateState(0, 0, 0);
       }
     });
@@ -288,59 +333,84 @@ export default function App() {
   return (
     <div className="App">
       <BackgroundVideo />
-      <div className="min-h-screen relative flex items-center justify-center px-4">
-        <div className="bg-white/10 backdrop-blur-xl p-10 rounded-3xl shadow-2xl w-full max-w-xl flex flex-col items-center">
-          <h1 className="text-3xl font-bold mb-6 tracking-tight text-white text-center">
-            Control de Movimiento<br />RoboMesha
-          </h1>
-  
-          <div className="mb-2 w-full flex justify-start items-center -mt-5">
-            <div className="relative w-48 z-50">
-              <Listbox 
-                value={carroSeleccionado} 
-                onChange={ocuparCarrito}
-              >
-                <div className="relative">
-                  <Listbox.Label className="block mb-1 text-xs font-bold text-white">Selecciona un carrito</Listbox.Label>
-                  <Listbox.Button className="relative w-full rounded-md bg-gray-800 bg-opacity-30 py-2 pl-4 pr-10 text-left border border-white/10 text-white backdrop-blur-md text-sm focus:outline-none z-50 shadow">
-                    <span className="block capitalize justify-center items-center">
-                      {carros.find(c => c.idReal === carroSeleccionado)?.alias || 'Ninguno'}
-                    </span>
-                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                      <ChevronUpDownIcon className="h-4 w-4 text-white/40" aria-hidden="true" />
-                    </span>
-                  </Listbox.Button>
-                  <Listbox.Options className="absolute mt-2 w-full max-h-60 overflow-auto rounded-md bg-gray-800 bg-opacity-50 backdrop-blur-md shadow-2xl border border-white/10 py-1 z-50">
-                  {carros.map((carro, idx) => (
-                    <Listbox.Option
-                      key={idx}
-                      value={carro.idReal}
-                      disabled={carro.ocupado}
-                      className={({ active, disabled }) =>
-                        `cursor-pointer select-none px-4 py-2 text-sm rounded-md 
-                        ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
-                        ${active ? 'bg-white/20 text-white' : 'text-white/80'}`
-                      }
-                    >
-                      {({ selected }) => (
-                        <div className="flex justify-between items-center">
-                          <span className={`capitalize ${selected ? 'font-semibold' : ''}`}>
-                            {carro.alias} {carro.ocupado ? '(Ocupado)' : ''}
-                          </span>
-                          {selected && !carro.ocupado && <CheckIcon className="h-4 w-4 text-white ml-2" />}
-                        </div>
-                      )}
-                    </Listbox.Option>
-                  ))}
-                  </Listbox.Options>
+      <div className="min-h-screen relative px-4 pb-28 sm:pb-10">
+        <div className="mx-auto w-full max-w-5xl">
+          <div className="bg-white/10 backdrop-blur-xl p-6 sm:p-8 rounded-3xl shadow-2xl w-full flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                RoboMesha — Control
+              </h1>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-white/80 text-sm">
+                  <span className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-400' : 'bg-red-500'}`}></span>
+                  <span>{connected ? 'Conectado' : 'Desconectado'}</span>
                 </div>
-              </Listbox>
+                <button
+                  disabled={!carroSeleccionado}
+                  onClick={finalizar}
+                  className={`hidden sm:inline-flex px-3 py-1.5 rounded-md text-sm font-semibold border border-white/20 ${carroSeleccionado ? 'text-white hover:bg-white/10' : 'text-white/40 cursor-not-allowed'}`}
+                >
+                  Finalizar
+                </button>
+              </div>
             </div>
-          </div>
   
-          <div className="mb-10" />
+            <div className="w-full -mt-2">
+              {/* Mobile select */}
+              <label className="block mb-1 text-xs font-bold text-white sm:hidden">Selecciona un carrito</label>
+              <select
+                className="sm:hidden w-full rounded-md bg-gray-800/60 py-2 px-3 border border-white/10 text-white text-sm"
+                value={carroSeleccionado || ''}
+                onChange={(e) => ocuparCarrito(e.target.value)}
+              >
+                <option value="" disabled>Elige…</option>
+                {carros.map((c, idx) => (
+                  <option key={idx} value={c.idReal} disabled={c.ocupado}>
+                    {c.alias}{c.ocupado ? ' (Ocupado)' : ''}
+                  </option>
+                ))}
+              </select>
+
+              {/* Desktop Listbox */}
+              <div className="hidden sm:block relative w-60 z-50">
+                <Listbox value={carroSeleccionado} onChange={ocuparCarrito}>
+                  <div className="relative">
+                    <Listbox.Label className="block mb-1 text-xs font-bold text-white">Selecciona un carrito</Listbox.Label>
+                    <Listbox.Button className="relative w-full rounded-md bg-gray-800/50 py-2 pl-4 pr-10 text-left border border-white/10 text-white backdrop-blur-md text-sm focus:outline-none z-50 shadow">
+                      <span className="block capitalize">
+                        {carros.find(c => c.idReal === carroSeleccionado)?.alias || 'Ninguno'}
+                      </span>
+                      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <ChevronUpDownIcon className="h-4 w-4 text-white/40" aria-hidden="true" />
+                      </span>
+                    </Listbox.Button>
+                    <Listbox.Options className="absolute mt-2 w-full max-h-60 overflow-auto rounded-md bg-gray-800/70 backdrop-blur-md shadow-2xl border border-white/10 py-1 z-50">
+                      {carros.map((carro, idx) => (
+                        <Listbox.Option
+                          key={idx}
+                          value={carro.idReal}
+                          disabled={carro.ocupado}
+                          className={({ active, disabled }) =>
+                            `cursor-pointer select-none px-4 py-2 text-sm rounded-md ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${active ? 'bg-white/20 text-white' : 'text-white/80'}`
+                          }
+                        >
+                          {({ selected }) => (
+                            <div className="flex justify-between items-center">
+                              <span className={`capitalize ${selected ? 'font-semibold' : ''}`}>
+                                {carro.alias} {carro.ocupado ? '(Ocupado)' : ''}
+                              </span>
+                              {selected && !carro.ocupado && <CheckIcon className="h-4 w-4 text-white ml-2" />}
+                            </div>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </div>
+                </Listbox>
+              </div>
+            </div>
   
-          <div className="grid grid-cols-3 gap-6 w-full">
+            <div className="hidden md:grid grid-cols-3 gap-6 w-full mt-2">
             {botones.map(({ label, action, rotation, shape, span }, idx) => (
               <div key={idx} className={span ? 'col-span-3 flex justify-center' : 'flex justify-center'}>
                 <button className={`button ${rotation ? `rotate-${rotation}` : ''} ${shape === 'square' ? 'button-stop' : ''}`} onClick={() => comando(action)}>
@@ -367,29 +437,64 @@ export default function App() {
                 </button>
               </div>
             ))}
-          </div>
-  
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-300 text-center w-full">
-            <div>Vx = {vx} | Vy = {vy} | ω = {w}</div>
-            <div>M1: 0 | M2: 0 | M3: 0 | M4: 0</div>
-            <div className="col-span-2">PWM M1: 0 | PWM M2: 0 | PWM M3: 0 | PWM M4: 0</div>
-          </div>
-  
-          <div className="flex flex-col sm:flex-row gap-6 items-center justify-center mt-6">
-            <VectorVisualizer vx={vx} vy={vy} omega={w} onChangeVector={(newVx, newVy) => updateState(newVx, newVy, w)} />
-            <div className="flex flex-col gap-4 p-4 bg-white/10 rounded-xl shadow-lg backdrop-blur-sm border border-white/20 w-full sm:w-60">
-              {[{ label: 'Vx', value: vx, onChange: e => updateState(parseInt(e.target.value), vy, w) }, { label: 'Vy', value: vy, onChange: e => updateState(vx, parseInt(e.target.value), w) }, { label: 'ω', value: w, onChange: e => updateState(vx, vy, parseInt(e.target.value)) }].map(({ label, value, onChange }) => (
-                <div key={label} className="flex flex-col gap-1">
-                  <label className="text-white text-sm font-semibold">{label}</label>
-                  <input type="range" min="-9" max="9" value={value} onChange={onChange} className="w-full h-2 rounded-lg appearance-none bg-gradient-to-r from-blue-500 to-white focus:outline-none accent-cyan-400" />
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+              <div className="hidden md:block">
+                <VectorVisualizer vx={vx} vy={vy} omega={w} onChangeVector={(newVx, newVy) => updateState(newVx, newVy, w)} />
+              </div>
+              <div className="flex flex-col gap-4 p-4 bg-white/10 rounded-xl shadow-lg backdrop-blur-sm border border-white/20 w-full">
+                <div className="flex items-center justify-between text-slate-200 text-sm">
+                  <div>Vx = {vx} | Vy = {vy} | ω = {w}</div>
+                  <button
+                    onClick={() => { updateState(0,0,0); if (navigator?.vibrate) navigator.vibrate([20, 30, 20]); }}
+                    className="px-3 py-1 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold"
+                  >
+                    E‑STOP
+                  </button>
                 </div>
-              ))}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="flex flex-col">
+                    <label className="text-white text-sm font-semibold mb-1">Vx</label>
+                    <input type="range" min="-9" max="9" value={vx} onChange={e => updateState(parseInt(e.target.value), vy, w)} className="w-full h-2 rounded-lg appearance-none bg-gradient-to-r from-blue-500 to-white focus:outline-none accent-cyan-400" />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-white text-sm font-semibold mb-1">Vy</label>
+                    <input type="range" min="-9" max="9" value={vy} onChange={e => updateState(vx, parseInt(e.target.value), w)} className="w-full h-2 rounded-lg appearance-none bg-gradient-to-r from-blue-500 to-white focus:outline-none accent-cyan-400" />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-white text-sm font-semibold mb-1">ω</label>
+                    <input type="range" min="-9" max="9" value={w} onChange={e => updateState(vx, vy, parseInt(e.target.value))} className="w-full h-2 rounded-lg appearance-none bg-gradient-to-r from-blue-500 to-white focus:outline-none accent-cyan-400" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-  
-          <button onClick={finalizar} className="mt-8 px-10 py-3 text-xl font-bold rounded-xl bg-red-600 hover:bg-red-700">
-            Finalizar
-          </button>
+
+          {/* Sticky mobile control bar */}
+          <div className="fixed sm:static bottom-0 left-0 right-0 sm:right-auto sm:left-auto bg-black/40 sm:bg-transparent backdrop-blur-xl sm:backdrop-blur-0 border-t border-white/10 sm:border-0 px-4 py-2 sm:p-0">
+            <div className="mx-auto max-w-5xl">
+              <div className="sm:hidden grid grid-cols-2 gap-4 items-center py-2">
+                <div className="flex justify-center"><Joystick value={{ vx, vy }} onChange={(nvx, nvy) => updateState(nvx, nvy, w)} size={160} /></div>
+                <div className="flex flex-col items-center gap-3">
+                  <Dial value={w} onChange={(nw) => updateState(vx, vy, nw)} size={140} />
+                  <button
+                    onClick={() => { updateState(0,0,0); if (navigator?.vibrate) navigator.vibrate([20, 30, 20]); }}
+                    className="w-full max-w-[180px] px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold shadow"
+                  >
+                    E‑STOP
+                  </button>
+                  <button
+                    disabled={!carroSeleccionado}
+                    onClick={finalizar}
+                    className={`w-full max-w-[180px] px-4 py-2 rounded-lg border border-white/20 text-white font-semibold ${carroSeleccionado ? 'bg-white/10 hover:bg-white/20' : 'opacity-40 cursor-not-allowed'}`}
+                  >
+                    Finalizar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
