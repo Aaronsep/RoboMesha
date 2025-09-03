@@ -22,6 +22,16 @@ html, body {
   background-color: #0B1220; /* fallback base color to avoid white flash */
 }
 
+/* Prevent page scrolling on mobile when using gyro background */
+.lock-scroll {
+  position: fixed;
+  overflow: hidden;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  -webkit-overflow-scrolling: auto;
+}
+
 /* Glass helpers */
 .glass-card {
   @apply rounded-3xl bg-white/10 border border-white/10 backdrop-blur-xl ring-1 ring-white/10 shadow-2xl;

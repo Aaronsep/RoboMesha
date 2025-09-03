@@ -25,6 +25,7 @@ function BackgroundVideo() {
     if (!isMobileUI) return;
     const el = document.body;
     el.classList.add('gyro-gradient');
+    el.classList.add('lock-scroll');
 
     const setVars = (x, y) => {
       el.style.setProperty('--posX', String(x));
@@ -58,6 +59,7 @@ function BackgroundVideo() {
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation, true);
       el.classList.remove('gyro-gradient');
+      el.classList.remove('lock-scroll');
       el.style.removeProperty('--posX');
       el.style.removeProperty('--posY');
     };
