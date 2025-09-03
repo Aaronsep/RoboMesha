@@ -72,7 +72,7 @@ export default function Joystick({ size = 200, onChange, value = { vx: 0, vy: 0 
       onPointerMove={onPointerMove}
       onPointerUp={release}
       onPointerCancel={release}
-      style={{ width: size, height: size, touchAction: 'none' }}
+      style={{ width: size, height: size, touchAction: 'none', WebkitTapHighlightColor: 'transparent' }}
       className="relative select-none rounded-full shadow-2xl border border-white/10 ring-1 ring-white/10 overflow-hidden"
     >
       {/* Fondo y aros */}
@@ -108,14 +108,14 @@ export default function Joystick({ size = 200, onChange, value = { vx: 0, vy: 0 
 
       {/* Thumb circular semitransparente */}
       <div
-        className="absolute rounded-full"
+        className="absolute rounded-full shadow-xl border border-white/30 transition-transform duration-75 ease-out active:scale-[0.98]"
         style={{
           left: '50%',
           top: '50%',
-          width: size / 2,                 // el diámetro lo haces proporcional al joystick
+          width: size / 2,                 // diámetro proporcional
           height: size / 2,
           transform: `translate(-50%, -50%) translate(${pos.x}px, ${pos.y}px)`,
-          backgroundColor: 'rgba(0,0,0,0.4)',  // color oscuro semitransparente
+          backgroundColor: 'rgba(0,0,0,0.4)',
         }}
       >
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cyan-300 to-cyan-500" />

@@ -4,7 +4,7 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -21,3 +21,34 @@ html, body {
   overflow: auto;
 }
 
+/* Glass helpers */
+.glass-card {
+  @apply rounded-3xl bg-white/10 border border-white/10 backdrop-blur-xl ring-1 ring-white/10 shadow-2xl;
+}
+.btn-primary {
+  @apply bg-primary text-slate-900 font-semibold rounded-xl shadow hover:bg-primary-light transition-colors;
+}
+.btn-secondary {
+  @apply bg-white/10 border border-white/20 text-white rounded-xl hover:bg-white/20 transition-colors;
+}
+.btn-estop {
+  @apply bg-red-600 hover:bg-red-500 text-white font-extrabold rounded-2xl relative overflow-hidden shadow-[0_12px_30px_rgba(239,68,68,0.45)] px-6 py-3;
+}
+.btn-estop::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.5); /* yellow ring */
+  pointer-events: none;
+}
+.btn-estop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), rgba(0,0,0,0) 60%);
+  pointer-events: none;
+}
+.status-badge {
+  @apply inline-flex items-center gap-2 text-sm text-white/80;
+}

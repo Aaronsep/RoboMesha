@@ -10,6 +10,9 @@ import { Listbox } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import Joystick from './components/Joystick';
 import Dial from './components/Dial';
+import Card from './components/Card';
+import Button from './components/Button';
+import StatusBadge from './components/StatusBadge';
 
 // Safe UUID generator for older mobile browsers
 function safeUUID() {
@@ -333,25 +336,23 @@ export default function App() {
   return (
     <div className="App">
       <BackgroundVideo />
-      <div className="min-h-screen relative px-4 pb-28 sm:pb-10">
+      <div className="min-h-screen relative px-4 pt-6 sm:pt-10 pb-28 sm:pb-10">
         <div className="mx-auto w-full max-w-5xl">
-          <div className="bg-white/10 backdrop-blur-xl p-6 sm:p-8 rounded-3xl shadow-2xl w-full flex flex-col gap-4">
+          <Card className="p-6 sm:p-8 w-full flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                 RoboMesha — Control
               </h1>
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-white/80 text-sm">
-                  <span className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-400' : 'bg-red-500'}`}></span>
-                  <span>{connected ? 'Conectado' : 'Desconectado'}</span>
-                </div>
-                <button
+                <StatusBadge connected={connected} />
+                <Button
                   disabled={!carroSeleccionado}
                   onClick={finalizar}
-                  className={`hidden sm:inline-flex px-3 py-1.5 rounded-md text-sm font-semibold border border-white/20 ${carroSeleccionado ? 'text-white hover:bg-white/10' : 'text-white/40 cursor-not-allowed'}`}
+                  variant="secondary"
+                  className={`hidden sm:inline-flex text-sm ${carroSeleccionado ? '' : 'opacity-40 cursor-not-allowed'}`}
                 >
                   Finalizar
-                </button>
+                </Button>
               </div>
             </div>
   
@@ -443,33 +444,38 @@ export default function App() {
               <div className="hidden md:block">
                 <VectorVisualizer vx={vx} vy={vy} omega={w} onChangeVector={(newVx, newVy) => updateState(newVx, newVy, w)} />
               </div>
-              <div className="flex flex-col gap-4 p-4 bg-white/10 rounded-xl shadow-lg backdrop-blur-sm border border-white/20 w-full">
+              <div className="flex flex-col gap-4 p-4 glass-card w-full">
                 <div className="flex items-center justify-between text-slate-200 text-sm">
                   <div>Vx = {vx} | Vy = {vy} | ω = {w}</div>
-                  <button
+                  <Button
+                    variant="estop"
                     onClick={() => { updateState(0,0,0); if (navigator?.vibrate) navigator.vibrate([20, 30, 20]); }}
-                    className="px-3 py-1 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold"
-                  >
-                    E‑STOP
-                  </button>
+                    className="px-4 py-2"
+                  >E‑STOP</Button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="flex flex-col">
-                    <label className="text-white text-sm font-semibold mb-1">Vx</label>
-                    <input type="range" min="-9" max="9" value={vx} onChange={e => updateState(parseInt(e.target.value), vy, w)} className="w-full h-2 rounded-lg appearance-none bg-gradient-to-r from-blue-500 to-white focus:outline-none accent-cyan-400" />
-                  </div>
-                  <div className="flex flex-col">
-                    <label className="text-white text-sm font-semibold mb-1">Vy</label>
-                    <input type="range" min="-9" max="9" value={vy} onChange={e => updateState(vx, parseInt(e.target.value), w)} className="w-full h-2 rounded-lg appearance-none bg-gradient-to-r from-blue-500 to-white focus:outline-none accent-cyan-400" />
-                  </div>
-                  <div className="flex flex-col">
-                    <label className="text-white text-sm font-semibold mb-1">ω</label>
-                    <input type="range" min="-9" max="9" value={w} onChange={e => updateState(vx, vy, parseInt(e.target.value))} className="w-full h-2 rounded-lg appearance-none bg-gradient-to-r from-blue-500 to-white focus:outline-none accent-cyan-400" />
-                  </div>
+                  {[{ key:'Vx', value: vx, on: (val)=>updateState(val, vy, w)}, { key:'Vy', value: vy, on: (val)=>updateState(vx, val, w)}, { key:'ω', value: w, on: (val)=>updateState(vx, vy, val)}].map(({key, value, on}) => (
+                    <div key={key} className="flex flex-col">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-white text-sm font-semibold">{key}</label>
+                        <span className="px-2 py-0.5 rounded-md text-xs font-semibold text-white bg-black/40 border border-white/10">
+                          {value}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-9"
+                        max="9"
+                        value={value}
+                        onChange={e => on(parseInt(e.target.value))}
+                        className="w-full h-2 rounded-full appearance-none bg-white/10 accent-cyan-400"
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Sticky mobile control bar */}
           <div className="fixed sm:static bottom-0 left-0 right-0 sm:right-auto sm:left-auto bg-black/40 sm:bg-transparent backdrop-blur-xl sm:backdrop-blur-0 border-t border-white/10 sm:border-0 px-4 py-2 sm:p-0">
@@ -478,19 +484,17 @@ export default function App() {
                 <div className="flex justify-center"><Joystick value={{ vx, vy }} onChange={(nvx, nvy) => updateState(nvx, nvy, w)} size={160} /></div>
                 <div className="flex flex-col items-center gap-3">
                   <Dial value={w} onChange={(nw) => updateState(vx, vy, nw)} size={140} />
-                  <button
+                  <Button
+                    variant="estop"
                     onClick={() => { updateState(0,0,0); if (navigator?.vibrate) navigator.vibrate([20, 30, 20]); }}
-                    className="w-full max-w-[180px] px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold shadow"
-                  >
-                    E‑STOP
-                  </button>
-                  <button
+                    className="w-full max-w-[200px]"
+                  >E‑STOP</Button>
+                  <Button
                     disabled={!carroSeleccionado}
                     onClick={finalizar}
-                    className={`w-full max-w-[180px] px-4 py-2 rounded-lg border border-white/20 text-white font-semibold ${carroSeleccionado ? 'bg-white/10 hover:bg-white/20' : 'opacity-40 cursor-not-allowed'}`}
-                  >
-                    Finalizar
-                  </button>
+                    variant="secondary"
+                    className={`w-full max-w-[200px] ${carroSeleccionado ? '' : 'opacity-40 cursor-not-allowed'}`}
+                  >Finalizar</Button>
                 </div>
               </div>
             </div>
