@@ -338,7 +338,7 @@ export default function App() {
       <BackgroundVideo />
       <div className="min-h-screen relative px-4 pt-6 sm:pt-10 pb-28 sm:pb-10">
         <div className="mx-auto w-full max-w-5xl">
-          <Card className="p-6 sm:p-8 w-full flex flex-col gap-4">
+          <Card className="p-6 sm:p-8 w-full flex flex-col gap-4 sticky top-6 sm:static overscroll-contain z-10">
             <div className="flex items-center justify-between gap-3">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                 RoboMesha — Control
