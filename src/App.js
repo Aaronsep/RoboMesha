@@ -10,7 +10,6 @@ import { Listbox } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import Joystick from './components/Joystick';
 import Dial from './components/Dial';
-import Card from './components/Card';
 import Button from './components/Button';
 import StatusBadge from './components/StatusBadge';
 
@@ -338,7 +337,7 @@ export default function App() {
       <BackgroundVideo />
       <div className="min-h-screen relative px-4 pt-6 sm:pt-10 pb-28 sm:pb-10">
         <div className="mx-auto w-full max-w-5xl">
-          <Card className="p-6 sm:p-8 w-full flex flex-col gap-4 sticky top-6 sm:static overscroll-contain z-10">
+          <div className="glass-card p-6 sm:p-8 w-full flex flex-col gap-4 fixed top-[calc(env(safe-area-inset-top)+16px)] left-1/2 -translate-x-1/2 z-50 w-[min(100vw-2rem,720px)] sm:sticky sm:top-6 sm:left-auto sm:translate-x-0">
             <div className="flex items-center justify-between gap-3">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                 RoboMesha — Control
@@ -475,7 +474,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
 
           {/* Sticky mobile control bar */}
           <div className="fixed sm:static bottom-0 left-0 right-0 sm:right-auto sm:left-auto bg-black/40 sm:bg-transparent backdrop-blur-xl sm:backdrop-blur-0 border-t border-white/10 sm:border-0 px-4 py-2 sm:p-0">
