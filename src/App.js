@@ -452,7 +452,7 @@ export default function App() {
                     variant="estop"
                     onClick={() => { updateState(0,0,0); if (navigator?.vibrate) navigator.vibrate([20, 30, 20]); }}
                     className="px-4 py-2"
-                  >E‑STOP</Button>
+                  >Detener</Button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[{ key:'Vx', value: vx, on: (val)=>updateState(val, vy, w)}, { key:'Vy', value: vy, on: (val)=>updateState(vx, val, w)}, { key:'ω', value: w, on: (val)=>updateState(vx, vy, val)}].map(({key, value, on}) => (
@@ -489,7 +489,7 @@ export default function App() {
                     variant="estop"
                     onClick={() => { updateState(0,0,0); if (navigator?.vibrate) navigator.vibrate([20, 30, 20]); }}
                     className="w-full max-w-[200px]"
-                  >E‑STOP</Button>
+                  >Detener</Button>
                   <Button
                     disabled={!carroSeleccionado}
                     onClick={finalizar}
