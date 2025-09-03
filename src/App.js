@@ -46,6 +46,8 @@ export default function App() {
   const [w, setW] = useState(0);
   const [connected, setConnected] = useState(true);
 
+  // No layout changes between mobile/desktop; background handles device differences.
+
   const vxRef = useRef(vx);
   const vyRef = useRef(vy);
   const wRef = useRef(w);

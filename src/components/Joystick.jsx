@@ -73,7 +73,7 @@ export default function Joystick({ size = 200, onChange, value = { vx: 0, vy: 0 
       onPointerUp={release}
       onPointerCancel={release}
       style={{ width: size, height: size, touchAction: 'none', WebkitTapHighlightColor: 'transparent' }}
-      className="relative select-none rounded-full shadow-2xl border border-white/10 ring-1 ring-white/10 overflow-hidden"
+      className="relative select-none rounded-full shadow-2xl border border-white/10 ring-1 ring-white/10 overflow-visible"
     >
       {/* Fondo y aros */}
       <div className="absolute inset-0 rounded-full bg-gradient-to-br from-slate-800/70 to-slate-900/70" />
@@ -108,7 +108,7 @@ export default function Joystick({ size = 200, onChange, value = { vx: 0, vy: 0 
 
       {/* Thumb circular semitransparente */}
       <div
-        className="absolute rounded-full shadow-xl border border-white/30 transition-transform duration-75 ease-out active:scale-[0.98]"
+        className="absolute rounded-full shadow-xl border border-white/30 transition-transform duration-75 ease-out active:scale-[0.98] z-10"
         style={{
           left: '50%',
           top: '50%',
